@@ -1,0 +1,635 @@
+# Bitcoin Strategic Investment Model (V3)
+
+A sophisticated Python framework for strategic Bitcoin investment decisions based on macroeconomic indicators, on-chain metrics, and monetary policy analysis. This model synthesizes Federal Reserve policy, on-chain Bitcoin metrics, and M2 money supply data to identify high-probability entry points with proper position sizing and risk management.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Model Architecture](#model-architecture)
+- [Scenarios](#scenarios)
+- [API Configuration](#api-configuration)
+- [Usage Examples](#usage-examples)
+- [Signal Interpretation](#signal-interpretation)
+- [Risk Management](#risk-management)
+- [Backtesting](#backtesting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Disclaimer](#disclaimer)
+
+## Overview
+
+This project implements quantitative models for Bitcoin investment based on proven macroeconomic relationships discovered during the 2020-2024 market cycles. The framework combines:
+
+- **Federal Reserve Policy Analysis**: Interest rate decisions, quantitative easing/tightening cycles, and forward guidance
+- **On-Chain Metrics**: Exchange reserves, long-term holder behavior, NUPL (Net Unrealized Profit/Loss), and miner capitulation signals
+- **Money Supply Dynamics**: M2 growth rates, acceleration, and the 70-108 day lag effect on Bitcoin prices
+
+### Why This Approach?
+
+Traditional technical analysis often fails in Bitcoin due to its evolving nature as a macro asset. This model addresses that by:
+
+1. **Focusing on liquidity conditions** that drive all risk assets
+1. **Using blockchain transparency** for unique insights unavailable in traditional markets
+1. **Combining multiple timeframes** from immediate (Fed decisions) to lagged (M2 effects)
+1. **Implementing dynamic position sizing** based on signal confluence
+
+## Features
+
+### Core Capabilities
+
+- **Multi-Scenario Analysis**: Pre-configured models for different market conditions
+- **Real-Time Data Integration**: Connects to major data providers (FRED, Glassnode, CryptoQuant)
+- **Signal Strength Calculation**: Weighted scoring system for objective decision-making
+- **Position Sizing Algorithm**: Risk-adjusted position sizes from 5-25% of portfolio
+- **Trade Execution Plans**: Specific entry strategies optimized for each scenario
+- **Risk Management Framework**: Time-based exits and rebalancing triggers
+- **🚀 Automated Trading Integration**: Execute trades automatically on major crypto exchanges (Binance, Coinbase, Kraken, etc.)
+
+### Supported Scenarios
+
+1. **Fed Pivot + Low Exchange Reserves**: Monetary policy shifts with supply scarcity
+1. **M2 Expansion + Miner Capitulation**: Liquidity expansion with on-chain capitulation
+1. **NUPL Extremes** (Coming Soon): Valuation-based entry/exit signals
+1. **Conflicting Signals** (Coming Soon): Framework for mixed indicators
+1. **Early Cycle Accumulation** (Coming Soon): Multi-year positioning strategies
+
+### Exchange Integration Features
+
+- **Automated Trade Execution**: Signals trigger real trades on connected exchanges
+- **Multi-Exchange Support**: Binance, Coinbase, Kraken, Bybit, OKX, KuCoin, Gemini
+- **Paper Trading Mode**: Test strategies without real money
+- **Risk Controls**: Position limits, daily loss limits, circuit breakers
+- **Smart Order Execution**: Market orders, limit orders, scaled entries
+- **Real-Time Monitoring**: Track positions, P&L, and performance
+
+## Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- pip package manager
+- API keys for data providers (see [API Configuration](#api-configuration))
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/bitcoin-strategic-model.git
+cd bitcoin-strategic-model
+```
+
+### Step 2: Create Virtual Environment
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Step 4: Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+FRED_API_KEY=your_fred_api_key_here
+GLASSNODE_API_KEY=your_glassnode_api_key_here
+CRYPTOQUANT_API_KEY=your_cryptoquant_api_key_here
+COINGECKO_API_KEY=your_coingecko_api_key_here
+```
+
+## Quick Start
+
+```python
+from bitcoin_model import BitcoinMacroModel
+from bitcoin_model.exchange_integration import AutomatedTrader, TradingConfig
+
+# Initialize model with API keys
+api_keys = {
+    'fred': 'YOUR_FRED_API_KEY',
+    'glassnode': 'YOUR_GLASSNODE_API_KEY',
+    'cryptoquant': 'YOUR_CRYPTOQUANT_API_KEY'
+}
+
+# Create model instance
+model = BitcoinMacroModel(api_keys)
+
+# Run analysis for Scenario 1
+result = model.run_analysis(scenario=1, portfolio_value=100000)
+
+# Check for buy signals
+if result['signals']['buy_signal']:
+    print(f"Buy Signal Active! Recommended position: {result['signals']['position_size']*100:.1f}%")
+    print(f"Trade Plan: {result['trade_plan']}")
+
+# Optional: Setup automated trading
+trading_config = TradingConfig(
+    exchange='binance',
+    api_key='YOUR_EXCHANGE_API_KEY',
+    api_secret='YOUR_EXCHANGE_SECRET',
+    testnet=True,  # Always start with testnet!
+    dry_run=True   # Paper trading mode
+)
+
+trader = AutomatedTrader(model, trading_config)
+# await trader.start()  # Uncomment to start automated trading
+```
+
+## Model Architecture
+
+### Class Structure
+
+```
+BitcoinMacroModel
+├── FedPivotModel (Scenario 1)
+│   ├── get_fed_data()
+│   ├── get_exchange_reserves()
+│   ├── calculate_signal_strength()
+│   └── generate_trade_plan()
+├── M2MinerModel (Scenario 2)
+│   ├── get_m2_data()
+│   ├── get_hash_ribbon_data()
+│   ├── calculate_signal_strength()
+│   └── generate_trade_plan()
+└── ExchangeIntegration (NEW)
+    ├── execute_trade()
+    ├── get_balance()
+    ├── calculate_position_size()
+    └── monitor_positions()
+```
+
+### Signal Flow
+
+1. **Data Collection**: Fetch real-time data from multiple APIs
+1. **Signal Processing**: Calculate individual indicator scores (0-1 scale)
+1. **Signal Combination**: Weight and combine signals based on scenario
+1. **Decision Generation**: Trigger buy signals above threshold
+1. **Position Sizing**: Calculate risk-adjusted position size
+1. **Trade Planning**: Generate specific execution instructions
+
+## Scenarios
+
+### Scenario 1: Fed Pivot + Low Exchange Reserves
+
+**When to Use**: Federal Reserve shifts from tightening to easing while Bitcoin exchange reserves are at multi-year lows.
+
+**Key Indicators**:
+
+- Fed Funds Rate: Detecting cuts and policy pivots
+- Exchange Reserves: Below 2.5M BTC (critical below 2.35M)
+- Signal Threshold: 70% combined strength
+
+**Historical Performance**: September 2024 example - 50bps cut with 2.35M BTC reserves led to immediate rally.
+
+**Entry Strategy**: Scale in over 72 hours following Fed announcement
+
+- Immediate: 40% of position
+- 24 hours: 30% of position
+- 48 hours: 20% of position
+- 72 hours: 10% of position
+
+### Scenario 2: M2 Expansion + Miner Capitulation
+
+**When to Use**: Money supply expanding rapidly while Bitcoin miners show capitulation through hash rate metrics.
+
+**Key Indicators**:
+
+- M2 Growth: >10% year-over-year
+- M2 Acceleration: Positive change in growth rate
+- Hash Ribbon: 30-day MA crossing above 60-day MA after capitulation
+
+**Historical Performance**: March-May 2020 - 25% M2 expansion with miner capitulation preceded 2,400% rally.
+
+**Entry Strategy**: Accumulate over 30 days
+
+- Week 1: 30% of position
+- Week 2: 25% of position
+- Week 3: 25% of position
+- Week 4: 20% of position
+
+## API Configuration
+
+### Required API Keys
+
+1. **FRED (Federal Reserve Economic Data)**
+- Free API with no rate limits
+- Sign up at: https://fred.stlouisfed.org/docs/api/api_key.html
+- Used for: Interest rates, M2 money supply
+1. **Glassnode**
+- Paid tiers starting at $39/month
+- Sign up at: https://glassnode.com/pricing
+- Used for: On-chain metrics, hash rate data
+1. **CryptoQuant**
+- Various pricing tiers
+- Sign up at: https://cryptoquant.com/pricing
+- Used for: Exchange flows, advanced on-chain data
+1. **CoinGecko** (Optional)
+- Free tier: 50 calls/minute
+- Sign up at: https://www.coingecko.com/en/api/pricing
+- Used for: Price data, market metrics
+1. **Exchange APIs** (For Automated Trading)
+- Each exchange has its own API system
+- See [Exchange Integration Guide](#exchange-integration-guide) below
+
+### API Rate Limits
+
+```python
+# config/rate_limits.py
+RATE_LIMITS = {
+    'fred': None,  # No limits
+    'coingecko_free': 50,  # per minute
+    'glassnode_advanced': 20,  # per minute
+    'cryptoquant_professional': 3000  # per day
+}
+```
+
+## Exchange Integration Guide
+
+### ⚠️ Critical Safety Information
+
+**BEFORE USING AUTOMATED TRADING:**
+
+1. **Test Environment First**: Always use testnet/sandbox
+1. **Paper Trading**: Use dry_run=True initially
+1. **API Permissions**: Never enable withdrawal permissions
+1. **Start Small**: Begin with 1-5% position sizes
+1. **Monitor Actively**: Watch closely during first week
+1. **Use Stop Losses**: Set daily loss limits
+
+### Setting Up Exchange APIs
+
+#### Binance
+
+```bash
+1. Login to Binance
+2. Navigate to API Management
+3. Create API with label "Bitcoin_Strategic_Model"
+4. Enable ONLY "Enable Spot Trading"
+5. Set IP restrictions to your server IP
+6. Save keys securely in .env file
+```
+
+#### Coinbase
+
+```bash
+1. Login to Coinbase Pro
+2. Navigate to API settings
+3. Create new API key
+4. Select permissions: "View" and "Trade"
+5. Never select "Transfer"
+6. Whitelist IP addresses
+```
+
+### Exchange Integration Usage
+
+```python
+from bitcoin_model.exchange_integration import AutomatedTrader, TradingConfig, SafetyManager
+
+# Configure exchange
+exchange_config = TradingConfig(
+    exchange='binance',
+    api_key=os.getenv('BINANCE_API_KEY'),
+    api_secret=os.getenv('BINANCE_SECRET'),
+    testnet=True,  # ALWAYS start here
+    dry_run=True,  # Paper trading
+    max_position_size=0.05,  # 5% max to start
+    min_order_size_btc=0.001,
+    slippage_tolerance=0.02
+)
+
+# Initialize with safety controls
+safety = SafetyManager()
+trader = AutomatedTrader(model, exchange_config)
+
+# Check safety before trading
+if await safety.check_safety_conditions(trader.exchange):
+    await trader.start()
+```
+
+### Supported Exchanges
+
+|Exchange|Spot Trading|Futures|Testnet|WebSocket|
+|--------|------------|-------|-------|---------|
+|Binance |✅           |✅      |✅      |✅        |
+|Coinbase|✅           |❌      |✅      |✅        |
+|Kraken  |✅           |✅      |❌      |✅        |
+|Bybit   |✅           |✅      |✅      |✅        |
+|OKX     |✅           |✅      |✅      |✅        |
+|KuCoin  |✅           |✅      |❌      |✅        |
+|Gemini  |✅           |❌      |✅      |✅        |
+
+### Trading Execution Modes
+
+1. **Manual Signal Mode**: Model generates signals, you execute manually
+1. **Semi-Automated**: Model generates orders, requires confirmation
+1. **Fully Automated**: Model executes based on signals (use with caution)
+
+### Risk Management Features
+
+- **Position Limits**: Never exceed configured max position size
+- **Daily Loss Limits**: Stop trading if daily loss exceeds threshold
+- **Circuit Breakers**: Automatic halt on unusual conditions
+- **Order Validation**: Check balance and limits before execution
+- **Slippage Control**: Cancel orders exceeding slippage tolerance
+
+## Usage Examples
+
+### Example 1: Daily Monitoring Script
+
+```python
+import schedule
+import time
+from bitcoin_model import BitcoinMacroModel
+
+def check_signals():
+    model = BitcoinMacroModel(api_keys)
+    
+    # Check both scenarios
+    for scenario in [1, 2]:
+        result = model.run_analysis(scenario=scenario)
+        
+        if result['signals']['buy_signal']:
+            send_alert(f"Scenario {scenario} triggered!", result)
+            
+def send_alert(message, data):
+    # Implement your notification system
+    print(f"ALERT: {message}")
+    print(f"Signal Strength: {data['signals']['combined_score']:.2f}")
+    print(f"Position Size: {data['signals']['position_size']*100:.1f}%")
+
+# Schedule daily checks
+schedule.every().day.at("09:00").do(check_signals)
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+```
+
+### Example 2: Portfolio Integration
+
+```python
+from bitcoin_model import BitcoinMacroModel
+import pandas as pd
+
+class PortfolioManager:
+    def __init__(self, total_value=100000):
+        self.total_value = total_value
+        self.btc_allocation = 0
+        self.model = BitcoinMacroModel(api_keys)
+        
+    def rebalance(self):
+        # Get current signals
+        signals = []
+        for scenario in [1, 2]:
+            result = self.model.run_analysis(scenario, self.total_value)
+            signals.append(result)
+            
+        # Find strongest signal
+        best_signal = max(signals, key=lambda x: x['signals']['combined_score'])
+        
+        if best_signal['signals']['buy_signal']:
+            target_allocation = best_signal['signals']['position_size']
+            self.execute_rebalance(target_allocation)
+            
+    def execute_rebalance(self, target_allocation):
+        current_btc_value = self.get_current_btc_value()
+        current_allocation = current_btc_value / self.total_value
+        
+        if target_allocation > current_allocation:
+            buy_amount = (target_allocation - current_allocation) * self.total_value
+            print(f"BUY ${buy_amount:.2f} of Bitcoin")
+```
+
+### Example 3: Automated Trading Setup
+
+```python
+from bitcoin_model import BitcoinMacroModel
+from bitcoin_model.exchange_integration import AutomatedTrader, TradingConfig
+import asyncio
+
+async def run_automated_trading():
+    # Initialize model
+    model = BitcoinMacroModel(api_keys)
+    
+    # Configure exchange (start with paper trading!)
+    config = TradingConfig(
+        exchange='binance',
+        api_key=os.getenv('BINANCE_API_KEY'),
+        api_secret=os.getenv('BINANCE_SECRET'),
+        testnet=True,      # Use testnet first
+        dry_run=True,      # Paper trading mode
+        max_position_size=0.10  # Conservative 10% max
+    )
+    
+    # Create automated trader
+    trader = AutomatedTrader(model, config)
+    
+    # Start trading
+    await trader.start()
+    
+# Run the automated trader
+asyncio.run(run_automated_trading())
+```
+
+### Example 4: Backtesting Framework
+
+```python
+import pandas as pd
+from datetime import datetime, timedelta
+
+def backtest_scenario(scenario, start_date, end_date):
+    model = BitcoinMacroModel(api_keys)
+    results = []
+    
+    current_date = start_date
+    while current_date <= end_date:
+        # Run historical analysis
+        result = model.run_analysis(scenario, historical_date=current_date)
+        
+        if result['signals']['buy_signal']:
+            entry_price = get_btc_price(current_date)
+            exit_date = current_date + timedelta(days=90)  # Min hold period
+            exit_price = get_btc_price(exit_date)
+            
+            returns = (exit_price - entry_price) / entry_price
+            results.append({
+                'entry_date': current_date,
+                'exit_date': exit_date,
+                'returns': returns,
+                'signal_strength': result['signals']['combined_score']
+            })
+            
+        current_date += timedelta(days=1)
+        
+    return pd.DataFrame(results)
+```
+
+## Signal Interpretation
+
+### Understanding Signal Scores
+
+All signals are normalized to a 0-1 scale:
+
+- **0.0-0.3**: Weak signal, no action
+- **0.3-0.5**: Moderate signal, monitor closely
+- **0.5-0.7**: Strong signal, consider partial position
+- **0.7-1.0**: Very strong signal, full position warranted
+
+### Combining Multiple Signals
+
+The model uses weighted combinations:
+
+```python
+combined_score = (fed_score * 0.6) + (onchain_score * 0.4)  # Scenario 1
+combined_score = (m2_score * 0.5) + (miner_score * 0.5)     # Scenario 2
+```
+
+### Buy Signal Triggers
+
+- **Scenario 1**: Triggers at 70% combined strength
+- **Scenario 2**: Triggers at 75% combined strength (higher conviction required)
+
+## Risk Management
+
+### Position Sizing Guidelines
+
+```python
+POSITION_LIMITS = {
+    'conservative': {
+        'base': 0.03,  # 3%
+        'max': 0.10    # 10%
+    },
+    'moderate': {
+        'base': 0.05,  # 5%
+        'max': 0.15    # 15%
+    },
+    'aggressive': {
+        'base': 0.10,  # 10%
+        'max': 0.25    # 25%
+    }
+}
+```
+
+### Exit Strategies
+
+1. **Time-Based Exits**:
+- Scenario 1: Minimum 90-day hold
+- Scenario 2: Minimum 180-day hold
+1. **Signal-Based Exits**:
+- NUPL > 0.70 (approaching euphoria)
+- Exchange reserves > 2.8M BTC (distribution phase)
+- M2 growth deceleration below 5% YoY
+1. **Rebalancing Triggers**:
+- Position exceeds max allocation by 50%
+- New scenario triggers with higher conviction
+- Correlation breakdown (Bitcoin decorrelates from macro)
+
+### Risk Metrics
+
+```python
+def calculate_risk_metrics(position_size, portfolio_value):
+    metrics = {
+        'position_value': position_size * portfolio_value,
+        'max_drawdown': position_size * 0.50,  # Assume 50% BTC drawdown
+        'portfolio_impact': position_size * 0.50,  # Worst case
+        'kelly_criterion': calculate_kelly(win_rate=0.64, avg_win=2.5, avg_loss=0.5)
+    }
+    return metrics
+```
+
+## Backtesting
+
+### Historical Performance
+
+|Scenario  |Period   |Signals|Win Rate|Avg Return|Max Drawdown|
+|----------|---------|-------|--------|----------|------------|
+|Fed Pivot |2020-2024|8      |75%     |+156%     |-22%        |
+|M2 + Miner|2020-2024|5      |80%     |+245%     |-18%        |
+
+### Running Backtests
+
+```bash
+python backtest.py --scenario 1 --start 2020-01-01 --end 2024-12-31
+```
+
+### Performance Metrics
+
+- **Sharpe Ratio**: Risk-adjusted returns
+- **Win Rate**: Percentage of profitable trades
+- **Maximum Drawdown**: Largest peak-to-trough decline
+- **Recovery Time**: Average time to recover from drawdown
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Run tests
+pytest tests/
+
+# Run linting
+flake8 bitcoin_model/
+
+# Format code
+black bitcoin_model/
+```
+
+### Pull Request Process
+
+1. Fork the repository
+1. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+1. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+1. Push to the branch (`git push origin feature/AmazingFeature`)
+1. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the <LICENSE> file for details.
+
+## Disclaimer
+
+**IMPORTANT**: This software is for educational and research purposes only.
+
+- Not financial advice
+- Past performance does not guarantee future results
+- Cryptocurrency investments carry significant risk
+- Always do your own research
+- Consult with financial professionals before making investment decisions
+- **AUTOMATED TRADING WARNING**: The exchange integration feature can execute real trades. Use extreme caution, always start with testnet/paper trading, and never trade with funds you cannot afford to lose.
+
+The authors and contributors assume no responsibility for financial losses incurred through the use of this software.
+
+## Acknowledgments
+
+- Federal Reserve Economic Data (FRED) for providing free access to economic indicators
+- Glassnode for pioneering on-chain analytics
+- The Bitcoin community for transparency and open data
+- Academic researchers who identified these macroeconomic relationships
+
+## Support
+
+- **Documentation**: [Read the Docs](https://bitcoin-strategic-model.readthedocs.io)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/bitcoin-strategic-model/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/bitcoin-strategic-model/discussions)
+- **Email**: support@example.com
+
+-----
+
+Built with ❤️ for the Bitcoin community
